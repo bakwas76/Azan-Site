@@ -1,0 +1,706 @@
+import { useLayoutEffect, useRef, useState } from "react";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import GalleryView from "./components/Gallery.jsx";
+import CareerShowcase from "./components/CareerShowcase.jsx";
+import Navbar from "./components/Navbar.jsx";
+import { galleryItems } from "./data/galleryItems.js";
+import karachiLogo from "../Assests/images/Karachi_United_Football_Club_logo.png";
+import ismailLogo from "../Assests/images/Ismail Memorial.jpeg";
+import pakistanLogo from "../Assests/images/pakistan_pakistan-national-team.football-logos.cc.svg";
+
+gsap.registerPlugin(ScrollTrigger);
+
+// Hero photo: put a background-removed (transparent) PNG/WebP in Assests/images
+// and name it starting with "azan", e.g. azan.png or azan-cutout.png.
+const heroImages = import.meta.glob("../Assests/images/azan*.{png,webp,PNG,WEBP}", {
+  eager: true,
+  import: "default",
+});
+const HERO_IMG = Object.values(heroImages)[0] || null;
+// Green "Rook" mosaic effect on the hero photo. Set to false to go back to the plain photo.
+const HERO_MOSAIC = false;
+const MOSAIC_OPTS = { bg: null }; // transparent behind the player, so the green circle shows
+
+// ---------------------------------------------------------------
+// EDIT THIS SECTION: replace placeholders with Azan's real details.
+// ---------------------------------------------------------------
+const PLAYER = {
+  name: "Azan",
+  position: "Position",
+  country: "Pakistan",
+  club: "Current Club",
+  number: "00",
+  tagline: "Football is simple. Doing it well is not.",
+  about: [
+    "Add a short introduction here: where Azan grew up, how he started playing, and what drives him on the pitch.",
+    "Add a second paragraph about playing style, strengths, and goals for the coming seasons.",
+  ],
+  // Extra rows for the About card. PLACEHOLDERS: replace with real details.
+  profile: [
+    ["Born", "DD Month YYYY"],
+    ["Height", "000 cm"],
+    ["Preferred foot", "Right"],
+  ],
+  // NOTE: the numbers below are SAMPLE values. Replace with Azan's real stats.
+  career: [
+    {
+      id: "previous",
+      label: "Previous Club",
+      team: "Karachi United",
+      years: "2022 — 2024",
+      role: "Role / league",
+      logo: karachiLogo,
+      stats: { matches: 48, goals: 12, assists: 9 },
+    },
+    {
+      id: "current",
+      label: "Current Club",
+      team: "Ismail Memorial",
+      years: "2024 — Now",
+      role: "Role / league",
+      logo: ismailLogo,
+      stats: { matches: 26, goals: 10, assists: 7 },
+    },
+    {
+      id: "national",
+      label: "National Team",
+      team: "Pakistan",
+      years: "2023 — Now",
+      role: "Senior / Youth team",
+      logo: pakistanLogo,
+      stats: { matches: 8, goals: 2, assists: 3 },
+    },
+  ],
+  // Photos + categories live in src/data/galleryItems.js
+  gallery: galleryItems,
+  contact: {
+    email: "azan@example.com",
+    instagram: "https://instagram.com/",
+    twitter: "https://x.com/",
+  },
+};
+
+const NAV = [
+  ["about", "About"],
+  ["stats", "Stats"],
+  ["career", "Career"],
+  ["gallery", "Gallery"],
+  ["contact", "Contact"],
+];
+
+const BALL_PATH =
+  "m12 7.5 3.6 2.6-1.4 4.2H9.8l-1.4-4.2L12 7.5ZM12 3v4.5M3.8 9.3l4.6.8M20.2 9.3l-4.6.8M7 19.5l2.8-5.2M17 19.5l-2.8-5.2";
+
+function Preloader({ name, onReveal, onDone }) {
+  const ref = useRef(null);
+  const countRef = useRef(null);
+  const barRef = useRef(null);
+
+  useLayoutEffect(() => {
+    let cancelled = false;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.scrollTo(0, 0);
+
+    const state = { n: 0 };
+    const render = () => {
+      if (countRef.current) countRef.current.firstChild.nodeValue = String(Math.round(state.n));
+      if (barRef.current) barRef.current.style.transform = `scaleX(${state.n / 100})`;
+    };
+
+    const ctx = gsap.context(() => {
+      if (!reduce) {
+        gsap.from(".pre__char", { yPercent: 115, duration: 1, stagger: 0.09, ease: "power4.out" });
+        gsap.from(".pre__fade", { opacity: 0, y: 14, duration: 0.8, stagger: 0.1, delay: 0.3, ease: "power3.out" });
+      }
+      const counter = gsap.to(state, { n: 90, duration: reduce ? 0.2 : 1.8, ease: "power2.out", onUpdate: render });
+
+      const exit = () => {
+        if (cancelled) return;
+        onReveal();
+        gsap
+          .timeline({
+            onComplete: () => {
+              document.body.style.overflow = prevOverflow;
+              onDone();
+            },
+          })
+          .to(".pre__center, .pre__top, .pre__bottom", { y: -30, opacity: 0, duration: reduce ? 0.01 : 0.45, ease: "power2.in" })
+          .to(ref.current, { yPercent: -102, duration: reduce ? 0.01 : 1, ease: "power4.inOut" }, "-=0.1");
+      };
+
+      const finish = () => {
+        if (cancelled) return;
+        counter.kill();
+        gsap.to(state, { n: 100, duration: reduce ? 0.01 : 0.45, ease: "power1.out", onUpdate: render, onComplete: exit });
+      };
+
+      const pageLoaded = new Promise((res) =>
+        document.readyState === "complete" ? res() : window.addEventListener("load", res, { once: true })
+      );
+      const fonts = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+      const minTime = new Promise((r) => setTimeout(r, reduce ? 0 : 2000));
+      const cap = new Promise((r) => setTimeout(r, 5000)); // never wait forever
+      Promise.race([Promise.all([pageLoaded, fonts, minTime]), cap]).then(finish);
+    }, ref);
+
+    return () => {
+      cancelled = true;
+      document.body.style.overflow = prevOverflow;
+      ctx.revert();
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <div className="pre" ref={ref} role="status" aria-live="polite" aria-label="Loading">
+      <div className="pre__top pre__fade">
+        <span>Loading</span>
+        <span>Pakistan</span>
+      </div>
+
+      <div className="pre__center">
+        <span className="pre__ball pre__fade" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9" />
+            <path d={BALL_PATH} />
+          </svg>
+        </span>
+        <div className="pre__name" aria-hidden="true">
+          {name.split("").map((ch, i) => (
+            <span className="pre__mask" key={i}>
+              <span className="pre__char">{ch}</span>
+            </span>
+          ))}
+        </div>
+        <p className="pre__sub pre__fade">Professional footballer</p>
+      </div>
+
+      <div className="pre__bottom">
+        <span className="pre__fade" style={{ fontSize: "0.72rem", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--muted)" }}>
+          Warming up
+        </span>
+        <span className="pre__count" ref={countRef}>
+          0<small>%</small>
+        </span>
+      </div>
+      <span className="pre__bar" aria-hidden="true">
+        <span ref={barRef} />
+      </span>
+    </div>
+  );
+}
+
+function HeroPlaceholder() {
+  return (
+    <div className="hero__ph">
+      <span>Add a transparent photo: Assests/images/azan.png</span>
+      <svg viewBox="0 0 300 420" aria-hidden="true" preserveAspectRatio="xMidYMax meet">
+        <circle cx="150" cy="105" r="62" opacity="0.95" />
+        <path d="M30 420c0-92 48-160 120-160s120 68 120 160H30Z" opacity="0.8" />
+      </svg>
+    </div>
+  );
+}
+
+function Hero() {
+  const current = PLAYER.career.find((c) => c.id === "current");
+  const national = PLAYER.career.find((c) => c.id === "national");
+  const items = [PLAYER.position, current ? current.team : PLAYER.club, PLAYER.country, `No. ${PLAYER.number}`];
+  const group = (key) => (
+    <div className="marquee__group" key={key} aria-hidden={key !== "a" || undefined}>
+      {[...items, ...items].map((t, i) => (
+        <span className="marquee__item" key={i}>
+          {t}
+          <i />
+        </span>
+      ))}
+    </div>
+  );
+
+  return (
+    <section id="top" className="hero">
+      <div className="hero__bg" aria-hidden="true" />
+      <span className="hero__number" aria-hidden="true">
+        {PLAYER.number}
+      </span>
+
+      <div className="hero__grid">
+        <div className="hero__content">
+          <p className="eyebrow">
+            <span className="eyebrow__dot" aria-hidden="true" />
+            {PLAYER.position} · {PLAYER.country}
+          </p>
+          <h1 aria-label={PLAYER.name}>
+            {PLAYER.name.split("").map((c, i) => (
+              <span className="char-wrap" aria-hidden="true" key={i}>
+                <span className="char">{c}</span>
+              </span>
+            ))}
+          </h1>
+          <p className="hero__tagline">{PLAYER.tagline}</p>
+          <div className="hero__cta">
+            <a className="btn btn--primary" href="#career">
+              View career
+            </a>
+            <a className="btn btn--ghost" href="#contact">
+              Get in touch
+            </a>
+          </div>
+        </div>
+
+        <div className="hero__visual">
+          <span className="hero__blob" aria-hidden="true" />
+          {HERO_IMG ? (
+            HERO_MOSAIC ? (
+            <div className="hero__figure">
+              <img className="hero__img hero__img--ghost" src={HERO_IMG} alt={`${PLAYER.name}, ${PLAYER.position}`} />
+              <AsciiMosaic className="hero__mosaic" src={HERO_IMG} options={MOSAIC_OPTS} />
+            </div>
+          ) : (<img className="hero__img" src={HERO_IMG} alt={`${PLAYER.name}, ${PLAYER.position}`} />)
+          ) : (
+            <HeroPlaceholder />
+          )}
+
+          <div className="chip chip--club">
+            {current ? <img src={current.logo} alt="" /> : <span className="chip__icon">C</span>}
+            <span className="chip__txt">
+              <small>Club</small>
+              <b>{current ? current.team : PLAYER.club}</b>
+            </span>
+          </div>
+          <div className="chip chip--pos">
+            <span className="chip__icon">{PLAYER.number}</span>
+            <span className="chip__txt">
+              <small>Position</small>
+              <b>{PLAYER.position}</b>
+            </span>
+          </div>
+          <div className="chip chip--country">
+            {national ? <img src={national.logo} alt="" /> : <span className="chip__icon">PK</span>}
+            <span className="chip__txt">
+              <small>Country</small>
+              <b>{PLAYER.country}</b>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="hero__marquee">
+        <div className="marquee__track">
+          {group("a")}
+          {group("b")}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Section({ id, title, wide, children }) {
+  return (
+    <section id={id} className={`section reveal-section ${wide ? "section--wide" : ""}`}>
+      <h2 className="section__title">{title}</h2>
+      <div className="section__body">{children}</div>
+    </section>
+  );
+}
+
+function About() {
+  const current = PLAYER.career.find((c) => c.id === "current");
+  const facts = [
+    ["Position", PLAYER.position],
+    ["Current club", current ? current.team : PLAYER.club],
+    ["Nationality", PLAYER.country],
+    ["Jersey", `#${PLAYER.number}`],
+    ...PLAYER.profile,
+  ];
+  const [lead, ...rest] = PLAYER.about;
+  return (
+    <Section id="about" title="About" wide>
+      <div className="about">
+        <div className="about__text">
+          <p className="about__lead">{lead}</p>
+          {rest.map((p, i) => (
+            <p key={i} className="about__p">
+              {p}
+            </p>
+          ))}
+        </div>
+        <aside className="about__card" aria-label="Player profile">
+          <h3 className="about__card-title">Player profile</h3>
+          <dl className="about__facts">
+            {facts.map(([k, v]) => (
+              <div key={k}>
+                <dt>{k}</dt>
+                <dd>{v}</dd>
+              </div>
+            ))}
+          </dl>
+        </aside>
+      </div>
+    </Section>
+  );
+}
+
+const ICONS = {
+  matches: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" />
+      <path d="m12 7.5 3.6 2.6-1.4 4.2H9.8l-1.4-4.2L12 7.5ZM12 3v4.5M3.8 9.3l4.6.8M20.2 9.3l-4.6.8M7 19.5l2.8-5.2M17 19.5l-2.8-5.2" />
+    </svg>
+  ),
+  goals: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="12" cy="12" r="5" />
+      <circle cx="12" cy="12" r="1.2" />
+    </svg>
+  ),
+  assists: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="5.5" cy="17.5" r="2.5" />
+      <circle cx="18.5" cy="6.5" r="2.5" />
+      <path d="M8 16c5 0 3-9 8-9.5M14.5 4.8l2 1.7-1.7 2" />
+    </svg>
+  ),
+  caps: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 3 4.5 6v5.5c0 4.6 3.1 8 7.5 9.5 4.4-1.5 7.5-4.9 7.5-9.5V6L12 3Z" />
+      <path d="m9 12 2.2 2.2L15.5 10" />
+    </svg>
+  ),
+};
+
+function Stats() {
+  // Totals are calculated from the Career data, so you only edit stats once.
+  const sum = (key) => PLAYER.career.reduce((t, c) => t + c.stats[key], 0);
+  const national = PLAYER.career.find((c) => c.id === "national");
+  const matches = sum("matches");
+  const goals = sum("goals");
+  const assists = sum("assists");
+  const per = (n) => (matches ? (n / matches).toFixed(2) : "0.00");
+
+  const cards = [
+    { key: "matches", label: "Matches", value: matches, note: "All teams", big: true },
+    { key: "goals", label: "Goals", value: goals, note: `${per(goals)} per match` },
+    { key: "assists", label: "Assists", value: assists, note: `${per(assists)} per match` },
+    { key: "caps", label: "Caps", value: national ? national.stats.matches : 0, note: `For ${national ? national.team : "country"}` },
+  ];
+
+  return (
+    <Section id="stats" title="Stats" wide>
+      <div className="stats-grid">
+        {cards.map((c) => (
+          <article key={c.key} className={`stat-card ${c.big ? "stat-card--big" : ""}`}>
+            <span className="stat-card__icon">{ICONS[c.key]}</span>
+            <div className="stat-card__value">
+              <span data-count={c.value}>{c.value}</span>
+            </div>
+            <h3 className="stat-card__label">{c.label}</h3>
+            <p className="stat-card__note">{c.note}</p>
+            <span className="stat-card__bar" />
+          </article>
+        ))}
+      </div>
+    </Section>
+  );
+}
+
+function Career() {
+  return (
+    <Section id="career" title="Career" wide>
+      <CareerShowcase clubs={PLAYER.career} defaultId="current" />
+    </Section>
+  );
+}
+
+function Gallery() {
+  return (
+    <Section id="gallery" title="Gallery" wide>
+      <GalleryView items={PLAYER.gallery} />
+    </Section>
+  );
+}
+
+const ArrowUpRight = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M7 17 17 7M8 7h9v9" />
+  </svg>
+);
+
+function Contact() {
+  const { email, instagram, twitter } = PLAYER.contact;
+  const [copied, setCopied] = useState(false);
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(email);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      /* clipboard blocked: the mailto button still works */
+    }
+  };
+
+  return (
+    <Section id="contact" title="Contact" wide>
+      <div className="contact">
+        <h3 className="contact__title">Let’s talk football.</h3>
+        <p className="contact__sub">For media, sponsorships, trials and collaborations.</p>
+        <div className="contact__mail">
+          <a className="contact__btn" href={`mailto:${email}`}>
+            {email}
+            <ArrowUpRight />
+          </a>
+          <button type="button" className="contact__copy" onClick={copy} aria-live="polite">
+            {copied ? "Copied!" : "Copy"}
+          </button>
+        </div>
+        <ul className="contact__social">
+          <li>
+            <a href={instagram} target="_blank" rel="noreferrer">
+              Instagram <ArrowUpRight />
+            </a>
+          </li>
+          <li>
+            <a href={twitter} target="_blank" rel="noreferrer">
+              X / Twitter <ArrowUpRight />
+            </a>
+          </li>
+        </ul>
+      </div>
+    </Section>
+  );
+}
+
+function Footer() {
+  const { email, instagram, twitter } = PLAYER.contact;
+  return (
+    <footer className="footer">
+      <div className="footer__inner">
+        <p className="footer__word" aria-hidden="true">
+          {PLAYER.name}
+        </p>
+
+        <div className="footer__cols">
+          <div className="footer__brand">
+            <p className="footer__tag">{PLAYER.tagline}</p>
+            <p className="footer__meta">
+              {PLAYER.position} · {PLAYER.club}
+            </p>
+          </div>
+
+          <nav aria-label="Footer">
+            <h4>Navigate</h4>
+            <ul>
+              {NAV.map(([id, label]) => (
+                <li key={id}>
+                  <a href={`#${id}`}>{label}</a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          <div>
+            <h4>Connect</h4>
+            <ul>
+              <li>
+                <a href={`mailto:${email}`}>{email}</a>
+              </li>
+              <li>
+                <a href={instagram} target="_blank" rel="noreferrer">
+                  Instagram
+                </a>
+              </li>
+              <li>
+                <a href={twitter} target="_blank" rel="noreferrer">
+                  X / Twitter
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="footer__bottom">
+          <span>
+            © {new Date().getFullYear()} {PLAYER.name}. All rights reserved.
+          </span>
+          <a href="#top" className="footer__top">
+            Back to top
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 19V5M6 11l6-6 6 6" />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+export default function App() {
+  const root = useRef(null);
+  const introRef = useRef(null);
+  const [loaded, setLoaded] = useState(false);
+
+  useLayoutEffect(() => {
+    const mm = gsap.matchMedia();
+
+    mm.add("(prefers-reduced-motion: no-preference)", () => {
+      let off = () => {};
+      const ctx = gsap.context(() => {
+        // Hero intro (starts when the loader slides away)
+        const intro = gsap.timeline({ paused: true, defaults: { ease: "power3.out" } });
+        intro
+          .from(".header", { y: -30, opacity: 0, duration: 0.8 })
+          .from(".eyebrow", { y: 16, opacity: 0, duration: 0.7 }, "-=0.4")
+          .from(".char", { yPercent: 110, duration: 1, stagger: 0.07, ease: "power4.out" }, "-=0.4")
+          .from(".hero__tagline", { y: 20, opacity: 0, duration: 0.8 }, "-=0.5")
+          .from(".hero__cta > *", { y: 20, opacity: 0, duration: 0.7, stagger: 0.1 }, "-=0.5")
+          .from(".hero__number", { opacity: 0, x: 60, duration: 1.4, ease: "power2.out" }, 0.1)
+          .from(".hero__blob", { scale: 0.4, opacity: 0, duration: 1.2, ease: "back.out(1.4)" }, 0.15)
+          .from(".hero__img, .hero__figure, .hero__ph", { y: 90, opacity: 0, duration: 1.2 }, 0.35)
+          .from(".chip", { scale: 0.6, opacity: 0, duration: 0.7, stagger: 0.12, ease: "back.out(2)" }, 0.95)
+          .from(".hero__marquee", { yPercent: 100, duration: 0.9 }, 0.5);
+        introRef.current = intro;
+
+        // Floating chips
+        gsap.to(".chip", {
+          y: "+=10",
+          duration: 2.2,
+          ease: "sine.inOut",
+          yoyo: true,
+          repeat: -1,
+          stagger: { each: 0.5, from: "random" },
+        });
+
+        // Mouse parallax on the photo (desktop only)
+        const hero = document.querySelector(".hero");
+        if (hero && window.matchMedia("(hover: hover) and (min-width: 900px)").matches) {
+          const imgX = gsap.quickTo(".hero__img, .hero__figure, .hero__ph", "x", { duration: 0.8, ease: "power3.out" });
+          const blobX = gsap.quickTo(".hero__blob", "x", { duration: 1, ease: "power3.out" });
+          const onMove = (e) => {
+            const nx = e.clientX / window.innerWidth - 0.5;
+            imgX(nx * 22);
+            blobX(nx * -30);
+          };
+          hero.addEventListener("pointermove", onMove);
+          off = () => hero.removeEventListener("pointermove", onMove);
+        }
+
+        // Big jersey number drifts as you scroll
+        gsap.to(".hero__number", {
+          yPercent: -35,
+          ease: "none",
+          scrollTrigger: {
+            trigger: ".hero",
+            start: "top top",
+            end: "bottom top",
+            scrub: true,
+          },
+        });
+
+        // Section reveals
+        gsap.utils.toArray(".reveal-section").forEach((sec) => {
+          const title = sec.querySelector(".section__title");
+          const body = sec.querySelector(".section__body");
+          const tl = gsap.timeline({
+            scrollTrigger: { trigger: sec, start: "top 80%", once: true },
+            defaults: { ease: "power3.out" },
+          });
+          tl.from(title, { x: -20, opacity: 0, duration: 0.7 }).from(
+            body.children,
+            { y: 36, opacity: 0, duration: 0.9, stagger: 0.12 },
+            "-=0.4"
+          );
+        });
+
+        // Stat counters
+        gsap.utils.toArray("[data-count]").forEach((el) => {
+          const raw = el.dataset.count;
+          const target = parseInt(raw, 10);
+          if (!Number.isFinite(target) || target <= 0) return;
+          const obj = { n: 0 };
+          gsap.to(obj, {
+            n: target,
+            duration: 1.8,
+            ease: "power2.out",
+            scrollTrigger: { trigger: el, start: "top 90%", once: true },
+            onUpdate: () => {
+              el.textContent = String(Math.round(obj.n)).padStart(raw.length, "0");
+            },
+          });
+        });
+
+        // Stat cards pop in one by one, accent bar fills
+        gsap.from(".stat-card", {
+          y: 40,
+          opacity: 0,
+          scale: 0.96,
+          duration: 0.9,
+          stagger: 0.12,
+          ease: "power3.out",
+          scrollTrigger: { trigger: ".stats-grid", start: "top 85%", once: true },
+        });
+        gsap.from(".stat-card__bar", {
+          scaleX: 0,
+          duration: 1.2,
+          delay: 0.3,
+          stagger: 0.12,
+          ease: "power3.out",
+          transformOrigin: "left",
+          scrollTrigger: { trigger: ".stats-grid", start: "top 85%", once: true },
+        });
+
+        // Footer
+        gsap.from(".footer__word", {
+          yPercent: 40,
+          opacity: 0,
+          duration: 1.1,
+          ease: "power3.out",
+          scrollTrigger: { trigger: ".footer", start: "top 90%", once: true },
+        });
+        gsap.from(".footer__cols > *, .footer__bottom", {
+          y: 24,
+          opacity: 0,
+          duration: 0.8,
+          stagger: 0.1,
+          ease: "power3.out",
+          scrollTrigger: { trigger: ".footer", start: "top 85%", once: true },
+        });
+      }, root);
+
+      return () => {
+        off();
+        ctx.revert();
+      };
+    });
+
+    return () => mm.revert();
+  }, []);
+
+  return (
+    <div ref={root}>
+      {!loaded && (
+        <Preloader
+          name={PLAYER.name}
+          onReveal={() => introRef.current && introRef.current.play()}
+          onDone={() => {
+            setLoaded(true);
+            requestAnimationFrame(() => ScrollTrigger.refresh());
+          }}
+        />
+      )}
+      <Navbar name={PLAYER.name} nav={NAV} contact={PLAYER.contact} number={PLAYER.number} />
+      <main>
+        <Hero />
+        <About />
+        <Stats />
+        <Career />
+        <Gallery />
+        <Contact />
+      </main>
+      <Footer />
+    </div>
+  );
+}
