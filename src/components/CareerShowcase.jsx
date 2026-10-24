@@ -48,7 +48,7 @@ export default function CareerShowcase({ clubs, defaultId }) {
           onUpdate: () => (el.textContent = String(Math.round(obj.n))),
         });
       });
-      gsap.fromTo(
+      if (panel.querySelector(".cs-bar")) gsap.fromTo(
         ".cs-bar",
         { scaleX: 0 },
         { scaleX: 1, duration: 1.2, ease: "power3.out", transformOrigin: "left" }
@@ -60,7 +60,12 @@ export default function CareerShowcase({ clubs, defaultId }) {
 
   return (
     <div className="cs">
-      <div className="cs__tabs" role="tablist" aria-label="Career clubs">
+      <div
+        className="cs__tabs"
+        role="tablist"
+        aria-label="Career clubs"
+        style={{ gridTemplateColumns: `repeat(${clubs.length}, 1fr)` }}
+      >
         {clubs.map((c) => (
           <button
             key={c.id}
@@ -89,24 +94,28 @@ export default function CareerShowcase({ clubs, defaultId }) {
             <p className="cs-fade cs__label">{active.label}</p>
             <h3 className="cs-fade cs__team">{active.team}</h3>
             <p className="cs-fade cs__meta">
-              {active.years} · {active.role}
+              {[active.years, active.role].filter(Boolean).join(" · ")}
             </p>
           </div>
         </div>
 
-        <div className="cs__stats">
-          {STAT_KEYS.map(([key, label]) => (
-            <div className="cs-fade cs__stat" key={key}>
-              <span className="cs__num" data-target={active.stats[key]}>
-                0
-              </span>
-              <span className="cs__stat-label">{label}</span>
+        {active.stats && (
+          <>
+            <div className="cs__stats">
+              {STAT_KEYS.map(([key, label]) => (
+                <div className="cs-fade cs__stat" key={key}>
+                  <span className="cs__num" data-target={active.stats[key]}>
+                    0
+                  </span>
+                  <span className="cs__stat-label">{label}</span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-        <div className="cs__line">
-          <span className="cs-bar" />
-        </div>
+            <div className="cs__line">
+              <span className="cs-bar" />
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

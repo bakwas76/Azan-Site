@@ -152,15 +152,21 @@ export default function Navbar({ name, nav, contact, number }) {
           </ul>
 
           <div className="menu__foot">
-            <a className="menu__fade menu__mail" href={`mailto:${contact.email}`}>
-              {contact.email}
+            <a
+              className="menu__fade menu__mail"
+              href={contact.email ? `mailto:${contact.email}` : contact.instagram}
+              {...(contact.email ? {} : { target: "_blank", rel: "noreferrer" })}
+            >
+              {contact.email || contact.instagramHandle || "Instagram"}
             </a>
             <div className="menu__social menu__fade">
-              <a href={contact.instagram} target="_blank" rel="noreferrer">
-                Instagram
-              </a>
-              <a href={contact.twitter} target="_blank" rel="noreferrer">
-                X / Twitter
+              {contact.email && (
+                <a href={contact.instagram} target="_blank" rel="noreferrer">
+                  Instagram
+                </a>
+              )}
+              <a href={contact.linktree} target="_blank" rel="noreferrer">
+                Linktree
               </a>
             </div>
           </div>

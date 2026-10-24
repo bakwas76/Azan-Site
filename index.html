@@ -3,8 +3,63 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Azan — professional footballer from Pakistan." />
-    <title>Azan — Professional Footballer</title>
+    <meta name="theme-color" content="#fafaf8" />
+
+    <title>Azan — Professional Footballer from Pakistan</title>
+    <meta
+      name="description"
+      content="Official website of Azan, professional footballer from Pakistan. Career, stats, photo gallery and contact."
+    />
+
+    <!-- Icons -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!--
+      SHARE PREVIEW (WhatsApp, Facebook, X, LinkedIn...)
+      IMPORTANT: after you deploy, replace https://YOUR-SITE.com with your real
+      website address in the 3 places below (og:url, og:image, twitter:image).
+      Preview sites need a full address, so it will not work until you do.
+    -->
+    <link rel="canonical" href="https://YOUR-SITE.com/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Azan" />
+    <meta property="og:title" content="Azan — Professional Footballer from Pakistan" />
+    <meta
+      property="og:description"
+      content="Career, stats, photo gallery and contact for Azan, professional footballer from Pakistan."
+    />
+    <meta property="og:url" content="https://YOUR-SITE.com/" />
+    <meta property="og:image" content="https://YOUR-SITE.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Azan — professional footballer from Pakistan" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Azan — Professional Footballer from Pakistan" />
+    <meta
+      name="twitter:description"
+      content="Career, stats, photo gallery and contact for Azan, professional footballer from Pakistan."
+    />
+    <meta name="twitter:image" content="https://YOUR-SITE.com/og-image.png" />
+
+    <!-- Helps Google understand who this site is about -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Muhammad Azan",
+        "alternateName": "Azan",
+        "jobTitle": "Professional footballer",
+        "nationality": "Pakistani",
+        "url": "https://YOUR-SITE.com/",
+        "sameAs": [
+          "https://www.instagram.com/theazaanofficial/",
+          "https://linktr.ee/Azoo16"
+        ]
+      }
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -13,6 +68,7 @@
     />
   </head>
   <body>
+    <noscript>This website needs JavaScript to run. Please enable it in your browser.</noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

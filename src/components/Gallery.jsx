@@ -2,9 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { gsap } from "gsap";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, EffectCoverflow } from "swiper/modules";
+import { Autoplay, EffectCoverflow, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/effect-coverflow";
+import "swiper/css/pagination";
 
 const pad = (n) => String(n).padStart(2, "0");
 
@@ -31,8 +32,6 @@ export default function Gallery({ items }) {
     typeof window !== "undefined" && window.matchMedia("(max-width: 640px)").matches ? "carousel" : "grid"
   );
   const [open, setOpen] = useState(null); // index inside `list`, or null
-  const [slide, setSlide] = useState(0); // current carousel slide (real index)
-  const swiperRef = useRef(null);
   const rootRef = useRef(null);
   const lbRef = useRef(null);
 
@@ -158,9 +157,7 @@ export default function Gallery({ items }) {
         <div className="gal__carousel carousel">
           <Swiper
             key={filter}
-            modules={[EffectCoverflow, Autoplay]}
-            onSwiper={(sw) => { swiperRef.current = sw; setSlide(0); }}
-            onSlideChange={(sw) => setSlide(sw.realIndex)}
+            modules={[EffectCoverflow, Autoplay, Pagination]}
             effect="coverflow"
             grabCursor
             centeredSlides
@@ -168,6 +165,7 @@ export default function Gallery({ items }) {
             loop={total >= 6}
             watchOverflow
             autoplay={total > 1 ? { delay: 3500, disableOnInteraction: true, pauseOnMouseEnter: true } : false}
+            pagination={{ type: "progressbar" }}
             coverflowEffect={{ rotate: 32, stretch: 0, depth: 120, modifier: 1, slideShadows: false }}
             className="carousel__swiper"
           >
@@ -184,25 +182,6 @@ export default function Gallery({ items }) {
               </SwiperSlide>
             ))}
           </Swiper>
-          {total > 1 && (
-            <div className="carousel__dots" role="group" aria-label="Carousel position">
-              {Array.from({ length: Math.min(5, total) }, (_, i) => {
-                const n = Math.min(5, total);
-                const target = Math.round((i * (total - 1)) / (n - 1));
-                const active = i === Math.round((slide / (total - 1)) * (n - 1));
-                return (
-                  <button
-                    key={i}
-                    type="button"
-                    className={`carousel__dot ${active ? "is-active" : ""}`}
-                    aria-label={`Go to photo ${target + 1}`}
-                    aria-current={active}
-                    onClick={() => swiperRef.current && swiperRef.current.slideToLoop(target)}
-                  />
-                );
-              })}
-            </div>
-          )}
         </div>
       )}
 

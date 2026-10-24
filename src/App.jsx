@@ -4,9 +4,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import GalleryView from "./components/Gallery.jsx";
 import CareerShowcase from "./components/CareerShowcase.jsx";
 import Navbar from "./components/Navbar.jsx";
-import { galleryItems } from "./data/galleryItems.js";
 import karachiLogo from "../Assests/images/Karachi_United_Football_Club_logo.png";
-import ismailLogo from "../Assests/images/Ismail Memorial.jpeg";
 import pakistanLogo from "../Assests/images/pakistan_pakistan-national-team.football-logos.cc.svg";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -18,68 +16,121 @@ const heroImages = import.meta.glob("../Assests/images/azan*.{png,webp,PNG,WEBP}
   import: "default",
 });
 const HERO_IMG = Object.values(heroImages)[0] || null;
-// Green "Rook" mosaic effect on the hero photo. Set to false to go back to the plain photo.
-const HERO_MOSAIC = false;
-const MOSAIC_OPTS = { bg: null }; // transparent behind the player, so the green circle shows
+
+// Gallery photos (optimized WebP): Assests/images/01.webp ... 60.webp
+const galleryFiles = import.meta.glob("../Assests/images/[0-9][0-9].webp", {
+  eager: true,
+  import: "default",
+});
+const photoUrl = (n) => galleryFiles[`../Assests/images/${String(n).padStart(2, "0")}.webp`];
+
+// [photo number, caption, size]  size: "tall" | "wide" | "normal" (default)
+// To move a photo to another filter, cut its row and paste it under that category.
+const GALLERY_RAW = {
+  Match: [
+    [4, "Referee steps in"], [5, "Chasing the ball"], [6, "Breaking forward"], [8, "Tempers flare"],
+    [10, "Mid-air challenge", "wide"], [11, "Fighting for possession"], [14, "Shielding the ball"],
+    [17, "Dribbling past defenders"], [18, "Race for the ball"], [21, "Pressing high", "wide"],
+    [25, "Controlling the midfield"], [30, "Driving forward"], [32, "Dribble duel"], [34, "Leaping the tackle"],
+    [35, "Midfield battle"], [37, "Tight marking"], [38, "Eyes on the ball"], [40, "Heated moment"],
+    [41, "Close control"], [42, "Pressing as a unit"], [46, "Counter attack"], [51, "Striking the ball"],
+    [54, "Physical contest"], [55, "Past the defender", "wide"], [56, "Crowded midfield"],
+    [57, "Scramble for the ball"], [59, "Moving the ball"],
+  ],
+  Team: [
+    [2, "National anthem"], [7, "Starting eleven", "wide"], [9, "Pre-match line-up"], [12, "Team photo", "wide"],
+    [13, "Pre-match handshakes"], [16, "Anthem time"], [20, "Squad portrait", "wide"], [22, "Team photo", "wide"],
+    [23, "Meeting the officials"], [24, "Teams line up"], [27, "White kit line-up", "wide"],
+    [33, "Squad portrait", "wide"], [43, "Standing for the anthem"], [49, "Hand on heart"],
+    [52, "Handshake line"], [60, "Match-day squad", "wide"],
+  ],
+  Moments: [
+    [1, "Off the pitch", "tall"], [3, "Match-day shirt #6", "tall"], [19, "Squad off-duty", "tall"],
+    [26, "Celebration"], [31, "Down time", "tall"], [39, "Ready in the locker room", "tall"],
+    [45, "Smiles in the dugout"], [47, "Teammates"], [48, "Passport in hand", "tall"],
+    [50, "Kit laid out", "tall"], [53, "At the stadium", "tall"],
+  ],
+};
+
+// Mixes the categories so the "All" view doesn't show 27 match photos in a row.
+function buildGallery() {
+  const queues = {};
+  Object.entries(GALLERY_RAW).forEach(([cat, rows]) => {
+    queues[cat] = rows.filter(([n]) => photoUrl(n)).map(([n, caption, size]) => ({
+      category: cat,
+      caption,
+      size: size || "normal",
+      src: photoUrl(n),
+      alt: `${caption} — Azan`,
+    }));
+  });
+  const pattern = ["Match", "Team", "Match", "Moments"];
+  const out = [];
+  let left = Object.values(queues).reduce((t, q) => t + q.length, 0);
+  for (let i = 0; left > 0; i++) {
+    const item = queues[pattern[i % pattern.length]].shift();
+    if (item) {
+      out.push(item);
+      left--;
+    }
+  }
+  return out;
+}
 
 // ---------------------------------------------------------------
 // EDIT THIS SECTION: replace placeholders with Azan's real details.
 // ---------------------------------------------------------------
 const PLAYER = {
   name: "Azan",
-  position: "Position",
+  position: "Defensive Midfielder",
   country: "Pakistan",
-  club: "Current Club",
-  number: "00",
+  club: "Karachi United",
+  number: "6", // from the photos (shirt #6). Change if wrong.
   tagline: "Football is simple. Doing it well is not.",
   about: [
-    "Add a short introduction here: where Azan grew up, how he started playing, and what drives him on the pitch.",
-    "Add a second paragraph about playing style, strengths, and goals for the coming seasons.",
+    "Muhammad Azan grew up in Lyari, Karachi, a neighbourhood famous for its deep football roots. He started playing on local streets before joining the Karachi United Academy, driven by a dream to put Pakistani football on the global map.",
+    "Now 18, he plays as a central defensive midfielder and can also operate as a right central midfielder. Known for his orchestrating role in the middle of the park, the right-footed Azan sets the tempo, links defence with attack, and represents both Karachi United and Pakistan.",
   ],
-  // Extra rows for the About card. PLACEHOLDERS: replace with real details.
-  profile: [
-    ["Born", "DD Month YYYY"],
-    ["Height", "000 cm"],
-    ["Preferred foot", "Right"],
-  ],
-  // NOTE: the numbers below are SAMPLE values. Replace with Azan's real stats.
+  // Shown in the About card
+  role: "CDM / RCM",
+  born: "2007-12-25", // age is calculated automatically
+  height: "5′4″ · 163 cm",
+  foot: "Right",
+  // !! SAMPLE NUMBERS in `stats` below (not Azan's real stats). Replace them before publishing.
+  // The Stats section totals are calculated from these, so edit them only here.
+  // (If a team has no `stats`, its numbers are hidden. If no team has any, the Stats section hides.)
   career: [
-    {
-      id: "previous",
-      label: "Previous Club",
-      team: "Karachi United",
-      years: "2022 — 2024",
-      role: "Role / league",
-      logo: karachiLogo,
-      stats: { matches: 48, goals: 12, assists: 9 },
-    },
     {
       id: "current",
       label: "Current Club",
-      team: "Ismail Memorial",
-      years: "2024 — Now",
-      role: "Role / league",
-      logo: ismailLogo,
-      stats: { matches: 26, goals: 10, assists: 7 },
+      team: "Karachi United",
+      years: "", // e.g. "2022 — Now"
+      role: "Central Defensive Midfielder",
+      logo: karachiLogo,
+      stats: { matches: 30, goals: 5, assists: 8 }, // SAMPLE
     },
     {
       id: "national",
       label: "National Team",
       team: "Pakistan",
-      years: "2023 — Now",
-      role: "Senior / Youth team",
+      years: "",
+      role: "National team",
       logo: pakistanLogo,
-      stats: { matches: 8, goals: 2, assists: 3 },
+      stats: { matches: 8, goals: 1, assists: 2 }, // SAMPLE
     },
   ],
-  // Photos + categories live in src/data/galleryItems.js
-  gallery: galleryItems,
+  // Edit captions / categories in GALLERY_RAW at the top of this file.
+  gallery: buildGallery(),
   contact: {
-    email: "azan@example.com",
-    instagram: "https://instagram.com/",
-    twitter: "https://x.com/",
+    email: "", // add an email here to show an email button + copy button
+    instagram: "https://www.instagram.com/theazaanofficial/",
+    instagramHandle: "@theazaanofficial",
+    linktree: "https://linktr.ee/Azoo16",
   },
 };
+
+// The Stats section is only shown once real numbers are added to PLAYER.career
+const HAS_STATS = PLAYER.career.some((c) => c.stats);
 
 const NAV = [
   ["about", "About"],
@@ -87,7 +138,7 @@ const NAV = [
   ["career", "Career"],
   ["gallery", "Gallery"],
   ["contact", "Contact"],
-];
+].filter(([id]) => id !== "stats" || HAS_STATS);
 
 const BALL_PATH =
   "m12 7.5 3.6 2.6-1.4 4.2H9.8l-1.4-4.2L12 7.5ZM12 3v4.5M3.8 9.3l4.6.8M20.2 9.3l-4.6.8M7 19.5l2.8-5.2M17 19.5l-2.8-5.2";
@@ -253,12 +304,7 @@ function Hero() {
         <div className="hero__visual">
           <span className="hero__blob" aria-hidden="true" />
           {HERO_IMG ? (
-            HERO_MOSAIC ? (
-            <div className="hero__figure">
-              <img className="hero__img hero__img--ghost" src={HERO_IMG} alt={`${PLAYER.name}, ${PLAYER.position}`} />
-              <AsciiMosaic className="hero__mosaic" src={HERO_IMG} options={MOSAIC_OPTS} />
-            </div>
-          ) : (<img className="hero__img" src={HERO_IMG} alt={`${PLAYER.name}, ${PLAYER.position}`} />)
+            <img className="hero__img" src={HERO_IMG} alt={`${PLAYER.name}, ${PLAYER.position}`} />
           ) : (
             <HeroPlaceholder />
           )}
@@ -308,12 +354,20 @@ function Section({ id, title, wide, children }) {
 
 function About() {
   const current = PLAYER.career.find((c) => c.id === "current");
+  const born = new Date(`${PLAYER.born}T00:00:00Z`);
+  const now = new Date();
+  let age = now.getUTCFullYear() - born.getUTCFullYear();
+  if (now < new Date(Date.UTC(now.getUTCFullYear(), born.getUTCMonth(), born.getUTCDate()))) age--;
+  const bornText = born.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
   const facts = [
     ["Position", PLAYER.position],
-    ["Current club", current ? current.team : PLAYER.club],
+    ["Role", PLAYER.role],
+    ["Club", current ? current.team : PLAYER.club],
     ["Nationality", PLAYER.country],
     ["Jersey", `#${PLAYER.number}`],
-    ...PLAYER.profile,
+    ["Born", `${bornText} (${age})`],
+    ["Height", PLAYER.height],
+    ["Preferred foot", PLAYER.foot],
   ];
   const [lead, ...rest] = PLAYER.about;
   return (
@@ -374,7 +428,7 @@ const ICONS = {
 
 function Stats() {
   // Totals are calculated from the Career data, so you only edit stats once.
-  const sum = (key) => PLAYER.career.reduce((t, c) => t + c.stats[key], 0);
+  const sum = (key) => PLAYER.career.reduce((t, c) => t + ((c.stats && c.stats[key]) || 0), 0);
   const national = PLAYER.career.find((c) => c.id === "national");
   const matches = sum("matches");
   const goals = sum("goals");
@@ -385,7 +439,7 @@ function Stats() {
     { key: "matches", label: "Matches", value: matches, note: "All teams", big: true },
     { key: "goals", label: "Goals", value: goals, note: `${per(goals)} per match` },
     { key: "assists", label: "Assists", value: assists, note: `${per(assists)} per match` },
-    { key: "caps", label: "Caps", value: national ? national.stats.matches : 0, note: `For ${national ? national.team : "country"}` },
+    { key: "caps", label: "Caps", value: national && national.stats ? national.stats.matches : 0, note: `For ${national ? national.team : "country"}` },
   ];
 
   return (
@@ -430,7 +484,7 @@ const ArrowUpRight = () => (
 );
 
 function Contact() {
-  const { email, instagram, twitter } = PLAYER.contact;
+  const { email, instagram, instagramHandle, linktree } = PLAYER.contact;
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {
@@ -443,31 +497,43 @@ function Contact() {
     }
   };
 
+  // Main button: email if there is one, otherwise Instagram
+  const main = email
+    ? { href: `mailto:${email}`, label: email, external: false }
+    : { href: instagram, label: instagramHandle || "Instagram", external: true };
+  const pills = [
+    ...(email ? [["Instagram", instagram]] : []),
+    ["Linktree", linktree],
+  ].filter(([, href]) => href);
+
   return (
     <Section id="contact" title="Contact" wide>
       <div className="contact">
         <h3 className="contact__title">Let’s talk football.</h3>
         <p className="contact__sub">For media, sponsorships, trials and collaborations.</p>
         <div className="contact__mail">
-          <a className="contact__btn" href={`mailto:${email}`}>
-            {email}
+          <a
+            className="contact__btn"
+            href={main.href}
+            {...(main.external ? { target: "_blank", rel: "noreferrer" } : {})}
+          >
+            {main.label}
             <ArrowUpRight />
           </a>
-          <button type="button" className="contact__copy" onClick={copy} aria-live="polite">
-            {copied ? "Copied!" : "Copy"}
-          </button>
+          {email && (
+            <button type="button" className="contact__copy" onClick={copy} aria-live="polite">
+              {copied ? "Copied!" : "Copy"}
+            </button>
+          )}
         </div>
         <ul className="contact__social">
-          <li>
-            <a href={instagram} target="_blank" rel="noreferrer">
-              Instagram <ArrowUpRight />
-            </a>
-          </li>
-          <li>
-            <a href={twitter} target="_blank" rel="noreferrer">
-              X / Twitter <ArrowUpRight />
-            </a>
-          </li>
+          {pills.map(([label, href]) => (
+            <li key={label}>
+              <a href={href} target="_blank" rel="noreferrer">
+                {label} <ArrowUpRight />
+              </a>
+            </li>
+          ))}
         </ul>
       </div>
     </Section>
@@ -475,7 +541,7 @@ function Contact() {
 }
 
 function Footer() {
-  const { email, instagram, twitter } = PLAYER.contact;
+  const { email, instagram, instagramHandle, linktree } = PLAYER.contact;
   return (
     <footer className="footer">
       <div className="footer__inner">
@@ -505,17 +571,19 @@ function Footer() {
           <div>
             <h4>Connect</h4>
             <ul>
-              <li>
-                <a href={`mailto:${email}`}>{email}</a>
-              </li>
+              {email && (
+                <li>
+                  <a href={`mailto:${email}`}>{email}</a>
+                </li>
+              )}
               <li>
                 <a href={instagram} target="_blank" rel="noreferrer">
-                  Instagram
+                  {instagramHandle || "Instagram"}
                 </a>
               </li>
               <li>
-                <a href={twitter} target="_blank" rel="noreferrer">
-                  X / Twitter
+                <a href={linktree} target="_blank" rel="noreferrer">
+                  Linktree
                 </a>
               </li>
             </ul>
@@ -559,7 +627,7 @@ export default function App() {
           .from(".hero__cta > *", { y: 20, opacity: 0, duration: 0.7, stagger: 0.1 }, "-=0.5")
           .from(".hero__number", { opacity: 0, x: 60, duration: 1.4, ease: "power2.out" }, 0.1)
           .from(".hero__blob", { scale: 0.4, opacity: 0, duration: 1.2, ease: "back.out(1.4)" }, 0.15)
-          .from(".hero__img, .hero__figure, .hero__ph", { y: 90, opacity: 0, duration: 1.2 }, 0.35)
+          .from(".hero__img, .hero__ph", { y: 90, opacity: 0, duration: 1.2 }, 0.35)
           .from(".chip", { scale: 0.6, opacity: 0, duration: 0.7, stagger: 0.12, ease: "back.out(2)" }, 0.95)
           .from(".hero__marquee", { yPercent: 100, duration: 0.9 }, 0.5);
         introRef.current = intro;
@@ -577,7 +645,7 @@ export default function App() {
         // Mouse parallax on the photo (desktop only)
         const hero = document.querySelector(".hero");
         if (hero && window.matchMedia("(hover: hover) and (min-width: 900px)").matches) {
-          const imgX = gsap.quickTo(".hero__img, .hero__figure, .hero__ph", "x", { duration: 0.8, ease: "power3.out" });
+          const imgX = gsap.quickTo(".hero__img, .hero__ph", "x", { duration: 0.8, ease: "power3.out" });
           const blobX = gsap.quickTo(".hero__blob", "x", { duration: 1, ease: "power3.out" });
           const onMove = (e) => {
             const nx = e.clientX / window.innerWidth - 0.5;
@@ -633,6 +701,7 @@ export default function App() {
         });
 
         // Stat cards pop in one by one, accent bar fills
+        if (HAS_STATS) {
         gsap.from(".stat-card", {
           y: 40,
           opacity: 0,
@@ -651,6 +720,7 @@ export default function App() {
           transformOrigin: "left",
           scrollTrigger: { trigger: ".stats-grid", start: "top 85%", once: true },
         });
+        }
 
         // Footer
         gsap.from(".footer__word", {
@@ -695,7 +765,7 @@ export default function App() {
       <main>
         <Hero />
         <About />
-        <Stats />
+        {HAS_STATS && <Stats />}
         <Career />
         <Gallery />
         <Contact />
