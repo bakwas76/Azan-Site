@@ -5,6 +5,7 @@ import GalleryView from "./components/Gallery.jsx";
 import CareerShowcase from "./components/CareerShowcase.jsx";
 import Navbar from "./components/Navbar.jsx";
 import karachiLogo from "../Assests/images/Karachi_United_Football_Club_logo.png";
+import shahidLogo from "../Assests/images/shahid-memorial.svg";
 import pakistanLogo from "../Assests/images/pakistan_pakistan-national-team.football-logos.cc.svg";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -84,53 +85,69 @@ const PLAYER = {
   name: "Azan",
   position: "Defensive Midfielder",
   country: "Pakistan",
-  club: "Karachi United",
-  number: "6", // from the photos (shirt #6). Change if wrong.
+  club: "Shahid Memorial FC",
+  number: "16",
   tagline: "Football is simple. Doing it well is not.",
   about: [
     "Muhammad Azan grew up in Lyari, Karachi, a neighbourhood famous for its deep football roots. He started playing on local streets before joining the Karachi United Academy, driven by a dream to put Pakistani football on the global map.",
-    "Now 18, he plays as a central defensive midfielder and can also operate as a right central midfielder. Known for his orchestrating role in the middle of the park, the right-footed Azan sets the tempo, links defence with attack, and represents both Karachi United and Pakistan.",
+    "Now 18, he plays as a central defensive midfielder and can also operate as a right central midfielder. Currently at Shahid Memorial FC, Azan sets the tempo, links defence with attack, and has represented Pakistan at SAFF level and in mini football, with 25 trophies already behind him.",
   ],
   // Shown in the About card
   role: "CDM / RCM",
   born: "2007-12-25", // age is calculated automatically
-  height: "5′4″ · 163 cm",
-  foot: "Right",
-  // !! SAMPLE NUMBERS in `stats` below (not Azan's real stats). Replace them before publishing.
-  // The Stats section totals are calculated from these, so edit them only here.
-  // (If a team has no `stats`, its numbers are hidden. If no team has any, the Stats section hides.)
+  height: "5′3″ · 160 cm", // you wrote "53" -> 5 ft 3 in. Change if wrong.
+  foot: "Right", // you wrote "Right : left foot". Change if he is left-footed.
+  // Overall numbers (all teams together) shown in the Stats section
+  totals: { matches: 40, goals: 8, assists: 14, cleanSheets: 6 },
+  honours: { trophies: 25, awards: 7, bestPlayer: 8 }, // bestPlayer = Best Player / Golden Boot
+  tournaments: ["SAFF Championship", "Minifootball", "Qatar Cup", "Super League", "CM Gold Cup", "National Games", "Peshawar League"],
   career: [
     {
       id: "current",
       label: "Current Club",
-      team: "Karachi United",
-      years: "", // e.g. "2022 — Now"
+      team: "Shahid Memorial FC",
+      years: "", // e.g. "2024 — Now"
       role: "Central Defensive Midfielder",
+      logo: shahidLogo, // placeholder logo: replace Assests/images/shahid-memorial.svg with the real one
+      highlights: ["Jersey #16", "Super League, CM Gold Cup, National Games, Peshawar League"],
+    },
+    {
+      id: "previous",
+      label: "Previous Club",
+      team: "Karachi United",
+      years: "",
+      role: "Academy & club",
       logo: karachiLogo,
-      stats: { matches: 30, goals: 5, assists: 8 }, // SAMPLE
+      highlights: ["Came through the Karachi United Academy"],
     },
     {
       id: "national",
       label: "National Team",
       team: "Pakistan",
       years: "",
-      role: "National team",
+      role: "U19 & Mini football",
       logo: pakistanLogo,
-      stats: { matches: 8, goals: 1, assists: 2 }, // SAMPLE
+      highlights: [
+        "2023: SAFF Championship final with Pakistan U19 (lost to India)",
+        "Pakistan mini football senior team: 2026 World Cup qualifiers, Indonesia",
+        "2019: Qatar Aspire Academy tournament, final won",
+      ],
     },
   ],
   // Edit captions / categories in GALLERY_RAW at the top of this file.
   gallery: buildGallery(),
   contact: {
-    email: "", // add an email here to show an email button + copy button
+    email: "Azanbaloch3666@gmail.com",
     instagram: "https://www.instagram.com/theazaanofficial/",
     instagramHandle: "@theazaanofficial",
+    tiktok: "https://vm.tiktok.com/ZS9ySR1BTxspm-52LOk/",
+    facebook: "https://www.facebook.com/share/1DocPV7dmK/",
     linktree: "https://linktr.ee/Azoo16",
   },
 };
 
 // The Stats section is only shown once real numbers are added to PLAYER.career
-const HAS_STATS = PLAYER.career.some((c) => c.stats);
+const HAS_STATS = !!PLAYER.totals;
 
 const NAV = [
   ["about", "About"],
@@ -427,19 +444,20 @@ const ICONS = {
 };
 
 function Stats() {
-  // Totals are calculated from the Career data, so you only edit stats once.
-  const sum = (key) => PLAYER.career.reduce((t, c) => t + ((c.stats && c.stats[key]) || 0), 0);
-  const national = PLAYER.career.find((c) => c.id === "national");
-  const matches = sum("matches");
-  const goals = sum("goals");
-  const assists = sum("assists");
-  const per = (n) => (matches ? (n / matches).toFixed(2) : "0.00");
+  const t = PLAYER.totals;
+  const h = PLAYER.honours;
+  const per = (n) => (t.matches ? (n / t.matches).toFixed(2) : "0.00");
 
   const cards = [
-    { key: "matches", label: "Matches", value: matches, note: "All teams", big: true },
-    { key: "goals", label: "Goals", value: goals, note: `${per(goals)} per match` },
-    { key: "assists", label: "Assists", value: assists, note: `${per(assists)} per match` },
-    { key: "caps", label: "Caps", value: national && national.stats ? national.stats.matches : 0, note: `For ${national ? national.team : "country"}` },
+    { key: "matches", label: "Matches", value: t.matches, note: "All teams", big: true },
+    { key: "goals", label: "Goals", value: t.goals, note: `${per(t.goals)} per match` },
+    { key: "assists", label: "Assists", value: t.assists, note: `${per(t.assists)} per match` },
+    { key: "caps", label: "Clean sheets", value: t.cleanSheets, note: "Kept at the back" },
+  ];
+  const honours = [
+    [h.trophies, "Trophies"],
+    [h.awards, "Tournament awards"],
+    [h.bestPlayer, "Best Player / Golden Boot"],
   ];
 
   return (
@@ -457,6 +475,19 @@ function Stats() {
           </article>
         ))}
       </div>
+      <div className="honours">
+        {honours.map(([n, l]) => (
+          <div className="honours__item" key={l}>
+            <b>{n}</b>
+            <span>{l}</span>
+          </div>
+        ))}
+      </div>
+      <ul className="tourn" aria-label="Major tournaments">
+        {PLAYER.tournaments.map((x) => (
+          <li key={x}>{x}</li>
+        ))}
+      </ul>
     </Section>
   );
 }
@@ -484,7 +515,7 @@ const ArrowUpRight = () => (
 );
 
 function Contact() {
-  const { email, instagram, instagramHandle, linktree } = PLAYER.contact;
+  const { email, instagram, instagramHandle, tiktok, facebook, linktree } = PLAYER.contact;
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {
@@ -503,6 +534,8 @@ function Contact() {
     : { href: instagram, label: instagramHandle || "Instagram", external: true };
   const pills = [
     ...(email ? [["Instagram", instagram]] : []),
+    ["TikTok", tiktok],
+    ["Facebook", facebook],
     ["Linktree", linktree],
   ].filter(([, href]) => href);
 
@@ -541,7 +574,7 @@ function Contact() {
 }
 
 function Footer() {
-  const { email, instagram, instagramHandle, linktree } = PLAYER.contact;
+  const { email, instagram, instagramHandle, tiktok, facebook, linktree } = PLAYER.contact;
   return (
     <footer className="footer">
       <div className="footer__inner">
@@ -581,6 +614,20 @@ function Footer() {
                   {instagramHandle || "Instagram"}
                 </a>
               </li>
+              {tiktok && (
+                <li>
+                  <a href={tiktok} target="_blank" rel="noreferrer">
+                    TikTok
+                  </a>
+                </li>
+              )}
+              {facebook && (
+                <li>
+                  <a href={facebook} target="_blank" rel="noreferrer">
+                    Facebook
+                  </a>
+                </li>
+              )}
               <li>
                 <a href={linktree} target="_blank" rel="noreferrer">
                   Linktree
@@ -628,19 +675,11 @@ export default function App() {
           .from(".hero__number", { opacity: 0, x: 60, duration: 1.4, ease: "power2.out" }, 0.1)
           .from(".hero__blob", { scale: 0.4, opacity: 0, duration: 1.2, ease: "back.out(1.4)" }, 0.15)
           .from(".hero__img, .hero__ph", { y: 90, opacity: 0, duration: 1.2 }, 0.35)
-          .from(".chip", { scale: 0.6, opacity: 0, duration: 0.7, stagger: 0.12, ease: "back.out(2)" }, 0.95)
+          .fromTo(".chip", { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.7, stagger: 0.12, ease: "back.out(2)", clearProps: "transform,opacity" }, 0.95)
           .from(".hero__marquee", { yPercent: 100, duration: 0.9 }, 0.5);
         introRef.current = intro;
 
-        // Floating chips
-        gsap.to(".chip", {
-          y: "+=10",
-          duration: 2.2,
-          ease: "sine.inOut",
-          yoyo: true,
-          repeat: -1,
-          stagger: { each: 0.5, from: "random" },
-        });
+        // Floating chips: done in CSS (see .chip animation) so it never fights the intro
 
         // Mouse parallax on the photo (desktop only)
         const hero = document.querySelector(".hero");
@@ -702,15 +741,20 @@ export default function App() {
 
         // Stat cards pop in one by one, accent bar fills
         if (HAS_STATS) {
-        gsap.from(".stat-card", {
-          y: 40,
-          opacity: 0,
-          scale: 0.96,
+        gsap.fromTo(
+          ".stat-card",
+          { y: 40, opacity: 0, scale: 0.96 },
+          {
+          y: 0,
+          opacity: 1,
+          scale: 1,
           duration: 0.9,
           stagger: 0.12,
           ease: "power3.out",
+          clearProps: "transform,opacity",
           scrollTrigger: { trigger: ".stats-grid", start: "top 85%", once: true },
-        });
+          }
+        );
         gsap.from(".stat-card__bar", {
           scaleX: 0,
           duration: 1.2,

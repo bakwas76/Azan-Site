@@ -99,6 +99,14 @@ export default function CareerShowcase({ clubs, defaultId }) {
           </div>
         </div>
 
+        {active.highlights && (
+          <ul className="cs-fade cs__hl">
+            {active.highlights.map((x) => (
+              <li key={x}>{x}</li>
+            ))}
+          </ul>
+        )}
+
         {active.stats && (
           <>
             <div className="cs__stats">

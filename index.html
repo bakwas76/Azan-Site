@@ -17,11 +17,11 @@
 
     <!--
       SHARE PREVIEW (WhatsApp, Facebook, X, LinkedIn...)
-      IMPORTANT: after you deploy, replace https://YOUR-SITE.com with your real
-      website address in the 3 places below (og:url, og:image, twitter:image).
-      Preview sites need a full address, so it will not work until you do.
+      %SITE_URL% is filled in automatically from vite.config.js.
+      After you deploy, open vite.config.js and put your real website address in SITE_URL.
+      (While developing on localhost it stays empty, so nothing outside is requested.)
     -->
-    <link rel="canonical" href="https://YOUR-SITE.com/" />
+    <link rel="canonical" href="%SITE_URL%/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Azan" />
     <meta property="og:title" content="Azan — Professional Footballer from Pakistan" />
@@ -29,8 +29,8 @@
       property="og:description"
       content="Career, stats, photo gallery and contact for Azan, professional footballer from Pakistan."
     />
-    <meta property="og:url" content="https://YOUR-SITE.com/" />
-    <meta property="og:image" content="https://YOUR-SITE.com/og-image.png" />
+    <meta property="og:url" content="%SITE_URL%/" />
+    <meta property="og:image" content="%SITE_URL%/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="Azan — professional footballer from Pakistan" />
@@ -41,7 +41,7 @@
       name="twitter:description"
       content="Career, stats, photo gallery and contact for Azan, professional footballer from Pakistan."
     />
-    <meta name="twitter:image" content="https://YOUR-SITE.com/og-image.png" />
+    <meta name="twitter:image" content="%SITE_URL%/og-image.png" />
 
     <!-- Helps Google understand who this site is about -->
     <script type="application/ld+json">
@@ -52,7 +52,7 @@
         "alternateName": "Azan",
         "jobTitle": "Professional footballer",
         "nationality": "Pakistani",
-        "url": "https://YOUR-SITE.com/",
+        "url": "%SITE_URL%/",
         "sameAs": [
           "https://www.instagram.com/theazaanofficial/",
           "https://linktr.ee/Azoo16"
