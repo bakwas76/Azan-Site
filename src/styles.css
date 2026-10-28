@@ -691,8 +691,9 @@ a {
   .chip { width: 158px; min-width: 0; max-width: none; min-height: 52px; padding: 7px 10px 7px 7px; border-radius: 14px; }
   .chip img, .chip__icon { width: 28px; height: 28px; }
   .chip__txt b { font-size: 0.74rem; white-space: normal; line-height: 1.15; }
-  .chip--club { left: 0; bottom: 22%; }
-  .chip--pos { right: 0; top: 8%; }
+  /* Phones: only 2 cards. Club is hidden, Position takes its spot. */
+  .chip--club { display: none; }
+  .chip--pos { left: 0; right: auto; top: auto; bottom: 22%; }
   .chip--country { right: 0; bottom: 6%; }
 }
 
