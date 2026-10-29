@@ -47,7 +47,7 @@ export default function Gallery({ items }) {
 
   // Tile entrance every time the filter or view changes
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!rootRef.current || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const ctx = gsap.context(() => {
       gsap.fromTo(
         ".gal__item, .carousel",
@@ -56,7 +56,7 @@ export default function Gallery({ items }) {
       );
     }, rootRef);
     return () => ctx.revert();
-  }, [filter, view]);
+  }, [filter, view, items.length]);
 
   const step = useCallback(
     (d) => setOpen((o) => (o === null || total === 0 ? o : (o + d + total) % total)),
@@ -91,6 +91,21 @@ export default function Gallery({ items }) {
   }, [open]);
 
   const current = open !== null ? list[open] : null;
+
+  if (items.length === 0) {
+    return (
+      <div className="gal gal--empty">
+        <span className="gal__empty-icon">
+          <Icon d={ICON.expand} />
+        </span>
+        <p>
+          <b>Photos are on the way.</b>
+          <br />
+          Match, team and moments photos will appear here.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="gal" ref={rootRef}>

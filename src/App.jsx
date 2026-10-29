@@ -4,6 +4,9 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import GalleryView from "./components/Gallery.jsx";
 import CareerShowcase from "./components/CareerShowcase.jsx";
 import Navbar from "./components/Navbar.jsx";
+import Highlights from "./components/Highlights.jsx";
+import CountUp from "./components/CountUp.jsx";
+import { ContentProvider, useContent } from "./content/ContentContext.jsx";
 import karachiLogo from "../Assests/images/Karachi_United_Football_Club_logo.png";
 import shahidLogo from "../Assests/images/shahid-memorial.svg";
 import pakistanLogo from "../Assests/images/pakistan_pakistan-national-team.football-logos.cc.svg";
@@ -18,71 +21,11 @@ const heroImages = import.meta.glob("../Assests/images/azan*.{png,webp,PNG,WEBP}
 });
 const HERO_IMG = Object.values(heroImages)[0] || null;
 
-// Gallery photos (optimized WebP): Assests/images/01.webp ... 60.webp
-const galleryFiles = import.meta.glob("../Assests/images/[0-9][0-9].webp", {
-  eager: true,
-  import: "default",
-});
-const photoUrl = (n) => galleryFiles[`../Assests/images/${String(n).padStart(2, "0")}.webp`];
-
-// [photo number, caption, size]  size: "tall" | "wide" | "normal" (default)
-// To move a photo to another filter, cut its row and paste it under that category.
-const GALLERY_RAW = {
-  Match: [
-    [4, "Referee steps in"], [5, "Chasing the ball"], [6, "Breaking forward"], [8, "Tempers flare"],
-    [10, "Mid-air challenge", "wide"], [11, "Fighting for possession"], [14, "Shielding the ball"],
-    [17, "Dribbling past defenders"], [18, "Race for the ball"], [21, "Pressing high", "wide"],
-    [25, "Controlling the midfield"], [30, "Driving forward"], [32, "Dribble duel"], [34, "Leaping the tackle"],
-    [35, "Midfield battle"], [37, "Tight marking"], [38, "Eyes on the ball"], [40, "Heated moment"],
-    [41, "Close control"], [42, "Pressing as a unit"], [46, "Counter attack"], [51, "Striking the ball"],
-    [54, "Physical contest"], [55, "Past the defender", "wide"], [56, "Crowded midfield"],
-    [57, "Scramble for the ball"], [59, "Moving the ball"],
-  ],
-  Team: [
-    [2, "National anthem"], [7, "Starting eleven", "wide"], [9, "Pre-match line-up"], [12, "Team photo", "wide"],
-    [13, "Pre-match handshakes"], [16, "Anthem time"], [20, "Squad portrait", "wide"], [22, "Team photo", "wide"],
-    [23, "Meeting the officials"], [24, "Teams line up"], [27, "White kit line-up", "wide"],
-    [33, "Squad portrait", "wide"], [43, "Standing for the anthem"], [49, "Hand on heart"],
-    [52, "Handshake line"], [60, "Match-day squad", "wide"],
-  ],
-  Moments: [
-    [1, "Off the pitch", "tall"], [3, "Match-day shirt #6", "tall"], [19, "Squad off-duty", "tall"],
-    [26, "Celebration"], [31, "Down time", "tall"], [39, "Ready in the locker room", "tall"],
-    [45, "Smiles in the dugout"], [47, "Teammates"], [48, "Passport in hand", "tall"],
-    [50, "Kit laid out", "tall"], [53, "At the stadium", "tall"],
-  ],
-};
-
-// Mixes the categories so the "All" view doesn't show 27 match photos in a row.
-function buildGallery() {
-  const queues = {};
-  Object.entries(GALLERY_RAW).forEach(([cat, rows]) => {
-    queues[cat] = rows.filter(([n]) => photoUrl(n)).map(([n, caption, size]) => ({
-      category: cat,
-      caption,
-      size: size || "normal",
-      src: photoUrl(n),
-      alt: `${caption} — Azan`,
-    }));
-  });
-  const pattern = ["Match", "Team", "Match", "Moments"];
-  const out = [];
-  let left = Object.values(queues).reduce((t, q) => t + q.length, 0);
-  for (let i = 0; left > 0; i++) {
-    const item = queues[pattern[i % pattern.length]].shift();
-    if (item) {
-      out.push(item);
-      left--;
-    }
-  }
-  return out;
-}
-
 // ---------------------------------------------------------------
 // EDIT THIS SECTION: replace placeholders with Azan's real details.
 // ---------------------------------------------------------------
 const PLAYER = {
-  name: "Azan",
+  name: "M.Azan",
   position: "Defensive Midfielder",
   country: "Pakistan",
   club: "Shahid Memorial FC",
@@ -97,9 +40,7 @@ const PLAYER = {
   born: "2007-12-25", // age is calculated automatically
   height: "5′3″ · 160 cm", // you wrote "53" -> 5 ft 3 in. Change if wrong.
   foot: "Right", // you wrote "Right : left foot". Change if he is left-footed.
-  // Overall numbers (all teams together) shown in the Stats section
-  totals: { matches: 40, goals: 8, assists: 14, cleanSheets: 6 },
-  honours: { trophies: 25, awards: 7, bestPlayer: 8 }, // bestPlayer = Best Player / Golden Boot
+  // Numbers come from src/content/stats.json + matches.json + trophies.json (see HOW_TO_UPDATE.md)
   tournaments: ["SAFF Championship", "Minifootball", "Qatar Cup", "Super League", "CM Gold Cup", "National Games", "Peshawar League"],
   career: [
     {
@@ -134,8 +75,6 @@ const PLAYER = {
       ],
     },
   ],
-  // Edit captions / categories in GALLERY_RAW at the top of this file.
-  gallery: buildGallery(),
   contact: {
     email: "Azanbaloch3666@gmail.com",
     instagram: "https://www.instagram.com/theazaanofficial/",
@@ -147,12 +86,13 @@ const PLAYER = {
 };
 
 // The Stats section is only shown once real numbers are added to PLAYER.career
-const HAS_STATS = !!PLAYER.totals;
+const HAS_STATS = true;
 
 const NAV = [
   ["about", "About"],
   ["stats", "Stats"],
   ["career", "Career"],
+  ["highlights", "Highlights"],
   ["gallery", "Gallery"],
   ["contact", "Contact"],
 ].filter(([id]) => id !== "stats" || HAS_STATS);
@@ -444,8 +384,7 @@ const ICONS = {
 };
 
 function Stats() {
-  const t = PLAYER.totals;
-  const h = PLAYER.honours;
+  const { totals: t } = useContent();
   const per = (n) => (t.matches ? (n / t.matches).toFixed(2) : "0.00");
 
   const cards = [
@@ -454,12 +393,6 @@ function Stats() {
     { key: "assists", label: "Assists", value: t.assists, note: `${per(t.assists)} per match` },
     { key: "caps", label: "Clean sheets", value: t.cleanSheets, note: "Kept at the back" },
   ];
-  const honours = [
-    [h.trophies, "Trophies"],
-    [h.awards, "Tournament awards"],
-    [h.bestPlayer, "Best Player / Golden Boot"],
-  ];
-
   return (
     <Section id="stats" title="Stats" wide>
       <div className="stats-grid">
@@ -467,7 +400,7 @@ function Stats() {
           <article key={c.key} className={`stat-card ${c.big ? "stat-card--big" : ""}`}>
             <span className="stat-card__icon">{ICONS[c.key]}</span>
             <div className="stat-card__value">
-              <span data-count={c.value}>{c.value}</span>
+              <CountUp n={c.value} />
             </div>
             <h3 className="stat-card__label">{c.label}</h3>
             <p className="stat-card__note">{c.note}</p>
@@ -475,19 +408,20 @@ function Stats() {
           </article>
         ))}
       </div>
-      <div className="honours">
-        {honours.map(([n, l]) => (
-          <div className="honours__item" key={l}>
-            <b>{n}</b>
-            <span>{l}</span>
-          </div>
-        ))}
-      </div>
       <ul className="tourn" aria-label="Major tournaments">
         {PLAYER.tournaments.map((x) => (
           <li key={x}>{x}</li>
         ))}
       </ul>
+    </Section>
+  );
+}
+
+function HighlightsSection() {
+  const current = PLAYER.career.find((c) => c.id === "current");
+  return (
+    <Section id="highlights" title="Highlights" wide>
+      <Highlights club={current ? current.team : PLAYER.club} />
     </Section>
   );
 }
@@ -501,9 +435,10 @@ function Career() {
 }
 
 function Gallery() {
+  const { newGallery } = useContent();
   return (
     <Section id="gallery" title="Gallery" wide>
-      <GalleryView items={PLAYER.gallery} />
+      <GalleryView items={newGallery} />
     </Section>
   );
 }
@@ -653,7 +588,7 @@ function Footer() {
   );
 }
 
-export default function App() {
+function AppInner() {
   const root = useRef(null);
   const introRef = useRef(null);
   const [loaded, setLoaded] = useState(false);
@@ -811,10 +746,19 @@ export default function App() {
         <About />
         {HAS_STATS && <Stats />}
         <Career />
+        <HighlightsSection />
         <Gallery />
         <Contact />
       </main>
       <Footer />
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <ContentProvider>
+      <AppInner />
+    </ContentProvider>
   );
 }

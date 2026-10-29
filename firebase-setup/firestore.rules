@@ -1,0 +1,17 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // !!! Put the footballer's admin email here (the one you create in Authentication > Users)
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email in ['PUT-ADMIN-EMAIL-HERE@example.com'];
+    }
+
+    // Everyone can READ the website content. Only the admin can WRITE.
+    match /matches/{id}    { allow read: if true; allow write: if isAdmin(); }
+    match /trophies/{id}   { allow read: if true; allow write: if isAdmin(); }
+    match /highlights/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /photos/{id}     { allow read: if true; allow write: if isAdmin(); }
+  }
+}
