@@ -238,7 +238,10 @@ function Hero() {
         <div className="hero__content">
           <p className="eyebrow">
             <span className="eyebrow__dot" aria-hidden="true" />
-            {PLAYER.position} · {PLAYER.country}
+            {/* Hidden shortcut to the admin page: looks like plain text, no pointer cursor */}
+            <a href="/admin" className="eyebrow__text" tabIndex={-1} draggable="false">
+              {PLAYER.position} · {PLAYER.country}
+            </a>
           </p>
           <h1 aria-label={PLAYER.name}>
             {PLAYER.name.split("").map((c, i) => (
